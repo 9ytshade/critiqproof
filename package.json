@@ -1,0 +1,14 @@
+{
+  "name": "critiqproof",
+  "private": true,
+  "version": "1.1.0",
+  "description": "CritiqProof - Staked Consumer Critiques & Purchase Verification Oracle on GenLayer",
+  "scripts": {
+    "genlayer": "genlayer",
+    "network:studionet": "genlayer network set studionet",
+    "network:info": "genlayer network info"
+  },
+  "devDependencies": {
+    "genlayer": "0.39.1"
+  }
+}
