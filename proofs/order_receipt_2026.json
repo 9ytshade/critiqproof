@@ -1,0 +1,15 @@
+{
+  "invoice_number": "INV-2026-98124",
+  "order_id": "ORD-2026-98124",
+  "purchase_date": "2026-03-15T14:22:00Z",
+  "item_name": "ProofPay Software Escrow Platform - Enterprise SaaS Subscription",
+  "customer_address": "0xB3B09558183AEC6c2Ff5aa547163B77a9266010A",
+  "billing_party": "ProofPay Software Escrow Platform Inc.",
+  "payment_status": "PAID_IN_FULL",
+  "payment_method": "GEN Escrow Contract",
+  "amount_paid_usd": "$499.00",
+  "amount_paid_gen": "250.00 GEN",
+  "transaction_reference": "0x7228257307dcd79aa8320ca130a11ebb066362435782a91913d6f8bdf3b28984",
+  "fulfillment_confirmation": "Customer service active and license provisioned on GenLayer Studionet.",
+  "terms": "Official purchase invoice serving as proof of software licensing and service utilization."
+}
