@@ -1,31 +1,31 @@
 {
-  "timestamp": "2026-10-15T09:02:31.924Z",
-  "contract": "0x2a83a70B4427240b0C56ec7F07A98bFba67eB704",
+  "timestamp": "2026-10-15T09:38:18.062Z",
+  "contract": "0x776773Cb27a43dFb074aB8Bde8bB7F776aBa0fFf",
   "version": "1.2.0",
-  "merchant": "0x42960E62f1a41c61426F133c5e5412dd732F9303",
+  "merchant": "0xB704b624ae5f776b3a3fA7496aDcdA4dB4DCAB56",
   "reviewer1": "0xB3B09558183AEC6c2Ff5aa547163B77a9266010A",
-  "reviewer2": "0xB704b624ae5f776b3a3fA7496aDcdA4dB4DCAB56",
+  "reviewer2": "0x42960E62f1a41c61426F133c5e5412dd732F9303",
   "cases": [
     {
       "name": "Scenario 1: Main Listing Verification",
       "listingId": 1,
       "status": "active",
-      "rewardPool": "90000000000000000",
-      "existingCritiquesCount": 5
+      "rewardPool": "100000000000000000",
+      "existingCritiquesCount": 0
     },
     {
       "name": "Scenario 2: Authentic Critique & AI Verification",
       "listingId": 1,
-      "critiqueId": 5,
-      "submitTx": "0xe7310fb34e63c663bf0093949305ac246399e12bb9bf5337159f62f7d7bbdc63",
-      "verifyTx": "0x02e9406336329a135ad2188f25d91103dbd3ac1bdceca27371a1f3f5eaac4c5b",
+      "critiqueId": 1,
+      "submitTx": "0x036c77ea53c3f671f66e0a8ee9eef88d043e42f3b1e6305610adb071f8d9f9f3",
+      "verifyTx": "0xbc54cd814e5f8e613779feb078471a353c53b10fe78d0b721cbb4ecfcc5b90d6",
       "critiqueStatus": "verified",
       "verdictOutcome": "VERIFIED",
       "authenticityResult": "PASS",
       "qualityResult": "PASS",
-      "trustScore": 20,
+      "trustScore": 100,
       "disbursedReward": "20000000000000000",
-      "remainingRewardPool": "90000000000000000",
+      "remainingRewardPool": "80000000000000000",
       "isEvidenceRewarded": true
     },
     {
@@ -34,13 +34,13 @@
       "attemptedUrl": "https://raw.githubusercontent.com/9ytshade/critiqproof/42a090d/proofs/order_receipt_2026.json",
       "duplicateSimulationReverted": true,
       "revertErrorMessage": "Missing or invalid parameters.\nDouble check you have provided the correct parameters.\n\nDetails: execution failed\nVersion: viem@2.56.9",
-      "finalCritiquesCount": 5
+      "finalCritiquesCount": 1
     },
     {
       "name": "Scenario 4: Merchant Listing Archival & Refund",
       "listing2Id": 2,
-      "createTx": "0x899eddcc7a9cfdc5e1f4cf889d720948d308f0957245e96b586caa29fd7b9cab",
-      "archiveTx": "0x7d3bf1048f4a0369c59c2570e4e7f36c7370f33c95283fe4c5d973320053ca82",
+      "createTx": "0xb7217da1c51571801c69ec93ec752cfe6eff1b26d3936cc6070801c13f763e49",
+      "archiveTx": "0xe337d22f6b6473dea6b18110fe8fb63a3dcf3e737a4eedad66248068901b18bc",
       "finalStatus": "archived",
       "refundedPool": "50000000000000000"
     }

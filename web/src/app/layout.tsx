@@ -29,7 +29,7 @@ export default function RootLayout({
             <div className="max-w-[1200px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[11px]">
               <div className="flex items-center gap-2 text-[#ffffff]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#6798ff] animate-pulse" />
-                <span className="font-medium text-[#ffffff]">CritiqProof v1.1.0</span>
+                <span className="font-medium text-[#ffffff]">CritiqProof v1.2.0</span>
                 <span className="text-[#313131]">/</span>
                 <span className="text-[#a7a7a7]">GenLayer Studionet (61999)</span>
               </div>

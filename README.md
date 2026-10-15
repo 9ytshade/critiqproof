@@ -16,13 +16,23 @@ GenLayer validators run an autonomous **AI Magistrate** under the Equivalence Pr
 
 - **Contract Version:** `1.2.0` (Economic Liveness, Replay Recovery & Slashing Integrity Hardened)
 - **Network:** GenLayer Studionet (Chain ID: `61999`, RPC: `https://studio.genlayer.com/api`)
-- **Contract Address:** [`0x2a83a70B4427240b0C56ec7F07A98bFba67eB704`](https://studio.genlayer.com/address/0x2a83a70B4427240b0C56ec7F07A98bFba67eB704)
-- **Deployment Transaction:** [`0xcb59729627d983455197fffd388d4e0a795519687b8146384e862beaf34314e1`](https://studio.genlayer.com/tx/0xcb59729627d983455197fffd388d4e0a795519687b8146384e862beaf34314e1)
-- **Deployment Consensus Status:** `ACCEPTED` (Round 0, Finalized)
+- **Deployer Account (9ytshade):** [`0xB704b624ae5f776b3a3fA7496aDcdA4dB4DCAB56`](https://studio.genlayer.com/address/0xB704b624ae5f776b3a3fA7496aDcdA4dB4DCAB56)
+- **Contract Address:** [`0x776773Cb27a43dFb074aB8Bde8bB7F776aBa0fFf`](https://studio.genlayer.com/address/0x776773Cb27a43dFb074aB8Bde8bB7F776aBa0fFf)
+- **Deployment Transaction:** [`0x5a12566aefd2bf5e560822ffa77772b11e9c1e8f713fc04e5d1e3f13b91b393e`](https://studio.genlayer.com/tx/0x5a12566aefd2bf5e560822ffa77772b11e9c1e8f713fc04e5d1e3f13b91b393e)
+- **Deployment Consensus Status:** `ACCEPTED` (Consensus Finalized / Success, Round 0, 5/5 Validator Agreement)
 - **CLI Toolchain:** `genlayer` 0.39.1, `genlayer-py` 0.16.3, `gltest` 0.29.2, `genvm-linter` 0.7.1
 - **Live Studionet Results:** [studionet-execution-results.json](file:///c:/Users/9ytshade/Desktop/Genlayer%20Intelligent%20Contracts/critiqproof/scripts/studionet-execution-results.json)
 - **Web App Stack:** Next.js 16.3.6 (Turbopack), React 19.2.8, Tailwind CSS 4, TypeScript, `genlayer-js` 1.1.8
 - **Design System:** Dovetail Design Language (Carbon `#0a0a0a`, Graphite `#141414`, Iron `#1e1e1e`, Soft Indigo `#6798ff`)
+
+---
+
+## GenLayer Consensus Mechanics: Understanding "ACCEPTED"
+
+In GenLayer's Equivalence Principle architecture, transactions undergo multi-validator Byzantine Fault Tolerant (BFT) voting:
+- **`ACCEPTED`:** Represents canonical consensus finality and successful on-chain execution. The validator leader's proposed state change (contract deployment or method execution) passed voting by the independent validator committee (5 out of 5 validators voted `AGREE` in Round 0), committing the contract and state updates to the blockchain ledger.
+- **`UNDETERMINED`:** Occurs during non-deterministic executions, network timeouts, or when validators cannot reach agreement. Prompts automated retry or appeal mechanics without slashing stakes.
+- **`REJECTED`:** Occurs when execution fails substantive checks, violates security assertions, or provides fraudulent evidence.
 
 ---
 
@@ -32,7 +42,7 @@ GenLayer validators run an autonomous **AI Magistrate** under the Equivalence Pr
 - **Problem:** Critiques stuck in `undetermined` state due to persistent upstream network failures or deadlocks permanently locked reviewer stakes and prevented merchants from archiving listings or recovering uncommitted funds.
 - **Solution:**
   - Added terminal states `STATUS_EXHAUSTED` and `OUTCOME_EXHAUSTED`.
-  - Implemented `resolve_exhausted_critique(listing_id, critique_id)` callable by anyone after 5 retry attempts (`MAX_VERIFICATION_ATTEMPTS`) or 3600 seconds (`EXHAUSTION_TIMEOUT_SECS`).
+  - Implemented `resolve_exhausted_critique(listing_id, critique_id)` callable by anyone after 5 retry attempts (`MAX_RETRY_ATTEMPTS`) or 3600 seconds (`EXHAUSTION_TIMEOUT_SECONDS`).
   - Safely returns 100% of reviewer stake without paying bounties and decrements `pending_review_count`, immediately unblocking merchant archival and 100% recovery of uncommitted escrow funds.
   - Fully replay-safe through atomic state transition to `STATUS_EXHAUSTED`.
 
@@ -121,13 +131,13 @@ The live deployment was executed and verified on GenLayer Studionet across 4 com
 
 | Scenario | Tx Hash | Result | Details |
 |---|---|---|---|
-| **Contract Deployment** | `0xcb59729627d983455197fffd388d4e0a795519687b8146384e862beaf34314e1` | ACCEPTED | Deployed contract `0x2a83a70B4427240b0C56ec7F07A98bFba67eB704` (v1.2.0) |
-| **Listing Creation #1** | `0x7228257307dcd79aa8320ca130a11ebb066362435782a91913d6f8bdf3b28984` | Finalized | Created Listing #1 (ProofPay Software Escrow Platform) with 0.1 GEN pool |
-| **Authentic Receipt Submission** | `0xe7310fb34e63c663bf0093949305ac246399e12bb9bf5337159f62f7d7bbdc63` | Finalized | Submitted Critique #5 with invoice INV-2026-98124 and 0.01 GEN stake |
-| **AI Magistrate Consensus** | `0x02e9406336329a135ad2188f25d91103dbd3ac1bdceca27371a1f3f5eaac4c5b` | Finalized | Verdict #4: VERIFIED. All 4 criteria passed. 0.02 GEN bounty paid, stake refunded |
-| **Duplicate Claim Rejection** | Reverted (On-Chain RPC Simulation) | Blocked | Attempted resubmission with rewarded invoice URL reverted; critique count unchanged |
-| **Archival Test Listing #2** | `0x899eddcc7a9cfdc5e1f4cf889d720948d308f0957245e96b586caa29fd7b9cab` | Finalized | Created Listing #2 with 0.05 GEN pool |
-| **Listing Archival & Full Refund** | `0x7d3bf1048f4a0369c59c2570e4e7f36c7370f33c95283fe4c5d973320053ca82` | Finalized | Archived Listing #2; 100% of 0.05 GEN (50000000000000000 wei) escrow refunded |
+| **Contract Deployment** | [`0x5a12566aefd2bf5e560822ffa77772b11e9c1e8f713fc04e5d1e3f13b91b393e`](https://studio.genlayer.com/tx/0x5a12566aefd2bf5e560822ffa77772b11e9c1e8f713fc04e5d1e3f13b91b393e) | ACCEPTED | Deployed contract `0x776773Cb27a43dFb074aB8Bde8bB7F776aBa0fFf` (v1.2.0) by `9ytshade_Deployer` |
+| **Listing Creation #1** | [`0x36bdc41f7c7a9e32627d83f20e5d31740274c8f50048cb15dc4e62eff030d142`](https://studio.genlayer.com/tx/0x36bdc41f7c7a9e32627d83f20e5d31740274c8f50048cb15dc4e62eff030d142) | Finalized | Created Listing #1 (ProofPay Software Escrow Platform) with 0.1 GEN pool |
+| **Authentic Receipt Submission** | [`0x036c77ea53c3f671f66e0a8ee9eef88d043e42f3b1e6305610adb071f8d9f9f3`](https://studio.genlayer.com/tx/0x036c77ea53c3f671f66e0a8ee9eef88d043e42f3b1e6305610adb071f8d9f9f3) | Finalized | Reviewer 1 submitted Critique #1 with invoice INV-2026-98124 and 0.01 GEN stake |
+| **AI Magistrate Consensus** | [`0xbc54cd814e5f8e613779feb078471a353c53b10fe78d0b721cbb4ecfcc5b90d6`](https://studio.genlayer.com/tx/0xbc54cd814e5f8e613779feb078471a353c53b10fe78d0b721cbb4ecfcc5b90d6) | Finalized | Verdict #1: VERIFIED. All criteria passed. 0.02 GEN bounty paid, stake refunded, Trust Score 100% |
+| **Duplicate Claim Rejection** | Reverted (On-Chain RPC Simulation) | Blocked | Attempted resubmission with rewarded invoice URL reverted; critique count unchanged (1) |
+| **Archival Test Listing #2** | [`0xb7217da1c51571801c69ec93ec752cfe6eff1b26d3936cc6070801c13f763e49`](https://studio.genlayer.com/tx/0xb7217da1c51571801c69ec93ec752cfe6eff1b26d3936cc6070801c13f763e49) | Finalized | Created Listing #2 with 0.05 GEN pool |
+| **Listing Archival & Full Refund** | [`0xe337d22f6b6473dea6b18110fe8fb63a3dcf3e737a4eedad66248068901b18bc`](https://studio.genlayer.com/tx/0xe337d22f6b6473dea6b18110fe8fb63a3dcf3e737a4eedad66248068901b18bc) | Finalized | Archived Listing #2; 100% of 0.05 GEN (50000000000000000 wei) escrow refunded |
 
 ---
 
@@ -135,6 +145,8 @@ The live deployment was executed and verified on GenLayer Studionet across 4 com
 
 ```
 critiqproof/
+├── assets/
+│   └── critiqproof-logo.svg    # Official high-resolution vector emblem
 ├── contracts/
 │   └── critiqproof.py          # Intelligent Contract v1.2.0 (15 methods, recovery paths, slashing safeguards)
 ├── proofs/
@@ -152,8 +164,12 @@ critiqproof/
 │   ├── STUDIONET_LIVE_RUN_REPORT.md     # Deployment and consensus audit log
 │   └── STRESSTEST_RUN_REPORT.md         # Adversarial stress test documentation
 ├── web/
+│   ├── public/
+│   │   ├── icon.svg            # Favicon emblem asset
+│   │   └── logo.svg            # Full project logo asset
 │   ├── src/
 │   │   ├── app/                # Next.js 16 App Router pages
+│   │   │   ├── icon.svg        # App Router icon
 │   │   │   ├── page.tsx        # Marketplace directory, KPI stats & range filters
 │   │   │   ├── listings/
 │   │   │   │   ├── create/     # Register merchant listing with multi-category & proof chips

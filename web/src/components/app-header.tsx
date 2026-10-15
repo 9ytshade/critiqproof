@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShieldIcon, MenuIcon, CloseIcon } from "./icons";
+import { CritiqProofLogo, MenuIcon, CloseIcon } from "./icons";
 import { WalletConnect } from "./wallet-connect";
 
 export function AppHeader() {
@@ -23,15 +23,12 @@ export function AppHeader() {
         {/* Left: Brand Logo */}
         <div className="flex-1 flex items-center justify-start">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="p-1.5 rounded-lg bg-[#141414] border border-[#1e1e1e] text-[#6798ff] group-hover:border-[#6798ff]/50 transition-colors">
-              <ShieldIcon className="w-5 h-5" />
+            <div className="p-1 rounded-lg bg-[#141414] border border-[#1e1e1e] text-[#6798ff] group-hover:border-[#6798ff]/50 transition-colors">
+              <CritiqProofLogo className="w-6 h-6" />
             </div>
             <div className="flex items-center gap-2">
               <span className="font-medium text-[#ffffff] tracking-tight text-base">
                 CritiqProof
-              </span>
-              <span className="tag-badge text-[10px] text-[#a7a7a7]">
-                STUDIONET
               </span>
             </div>
           </Link>

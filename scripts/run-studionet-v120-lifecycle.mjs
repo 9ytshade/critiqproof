@@ -10,7 +10,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const CONTRACT_ADDRESS = "0x2a83a70B4427240b0C56ec7F07A98bFba67eB704";
+const CONTRACT_ADDRESS = "0x776773Cb27a43dFb074aB8Bde8bB7F776aBa0fFf";
 const RPC_ENDPOINT = "https://studio.genlayer.com/api";
 
 async function main() {
@@ -20,23 +20,23 @@ async function main() {
   console.log(`Contract: ${CONTRACT_ADDRESS}`);
   console.log(`Network:  GenLayer Studionet (Chain 61999)\n`);
 
-  // 1. Setup Merchant / Deployer Account
-  const deployerPk = await keytar.getPassword("genlayer-cli", "account:proofpay-deployer");
-  if (!deployerPk) throw new Error("Deployer private key not found in keytar");
+  // 1. Setup Merchant / Deployer Account (9ytshade_Deployer)
+  const deployerPk = await keytar.getPassword("genlayer-cli", "account:9ytshade_Deployer");
+  if (!deployerPk) throw new Error("Deployer (9ytshade_Deployer) private key not found in keytar");
   const deployer = createAccount(deployerPk);
-  console.log(`[ACCOUNT] Merchant / Deployer: ${deployer.address}`);
+  console.log(`[ACCOUNT] Merchant / Deployer (9ytshade): ${deployer.address}`);
 
-  // 2. Setup Reviewer Account 1
+  // 2. Setup Reviewer Account 1 (vixDeployer)
   const reviewer1Pk = await keytar.getPassword("genlayer-cli", "account:vixDeployer");
   if (!reviewer1Pk) throw new Error("Reviewer 1 private key not found in keytar");
   const reviewer1 = createAccount(reviewer1Pk);
-  console.log(`[ACCOUNT] Reviewer 1:         ${reviewer1.address}`);
+  console.log(`[ACCOUNT] Reviewer 1:                    ${reviewer1.address}`);
 
-  // 3. Setup Reviewer Account 2
-  const reviewer2Pk = await keytar.getPassword("genlayer-cli", "account:9ytshade_Deployer");
+  // 3. Setup Reviewer Account 2 (proofpay-deployer)
+  const reviewer2Pk = await keytar.getPassword("genlayer-cli", "account:proofpay-deployer");
   if (!reviewer2Pk) throw new Error("Reviewer 2 private key not found in keytar");
   const reviewer2 = createAccount(reviewer2Pk);
-  console.log(`[ACCOUNT] Reviewer 2:         ${reviewer2.address}\n`);
+  console.log(`[ACCOUNT] Reviewer 2:                    ${reviewer2.address}\n`);
 
   const clientDeployer = createClient({
     chain: studionet,
@@ -179,9 +179,9 @@ async function main() {
 
   let critiqueVerified;
   let verdictData;
-  let submitCritiqueTxHash = "0xe7310fb34e63c663bf0093949305ac246399e12bb9bf5337159f62f7d7bbdc63";
-  let verifyCritiqueTxHash = "0x02e9406336329a135ad2188f25d91103dbd3ac1bdceca27371a1f3f5eaac4c5b";
-  let verifiedCritiqueId = 5;
+  let submitCritiqueTxHash = "";
+  let verifyCritiqueTxHash = "";
+  let verifiedCritiqueId = 1;
 
   if (!isAlreadyRewarded) {
     const nextCritiqueId = existingCritiques.length + 1;

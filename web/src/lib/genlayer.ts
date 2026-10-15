@@ -20,7 +20,7 @@ export type { FinalizedTransactionReceipt };
 
 export const CRITIQPROOF_CONTRACT_ADDRESS: `0x${string}` =
   (process.env.NEXT_PUBLIC_CRITIQPROOF_CONTRACT_ADDRESS as `0x${string}`) ||
-  "0x2a83a70B4427240b0C56ec7F07A98bFba67eB704";
+  "0x776773Cb27a43dFb074aB8Bde8bB7F776aBa0fFf";
 
 export const STUDIONET_RPC = "https://studio.genlayer.com/api";
 export const STUDIONET_CHAIN_ID = 61999;

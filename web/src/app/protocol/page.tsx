@@ -61,7 +61,7 @@ export default function ProtocolArchitecturePage() {
               Decentralized consumer critique verification, purchase authenticity enforcement, and cryptographic review economics.
             </h1>
             <p className="text-[16px] text-[var(--color-fog)] leading-relaxed max-w-3xl">
-              The complete on-chain specification, mathematical formulation, and validator consensus mechanisms governing CritiqProof v1.0.0 on GenLayer: how merchants post criteria-governed listings, how reviewers lock anti-sybil stakes, how validator magistrates fetch public HTTPS proof nondeterministically, and how truth-aligned financial settlements execute under the Equivalence Principle.
+              The complete on-chain specification, mathematical formulation, and validator consensus mechanisms governing CritiqProof v1.2.0 on GenLayer: how merchants post criteria-governed listings, how reviewers lock anti-sybil stakes, how validator magistrates fetch public HTTPS proof nondeterministically, and how truth-aligned financial settlements execute under the Equivalence Principle.
             </p>
           </div>
 
@@ -75,7 +75,7 @@ export default function ProtocolArchitecturePage() {
             <div className="pt-2 border-t border-[var(--color-iron)] font-mono text-[11px] text-[var(--color-fog)] space-y-1.5">
               <div className="flex justify-between">
                 <span>Contract Version:</span>
-                <span className="text-[var(--color-accent)] font-semibold">1.0.0 (GenVM Intelligent Contract)</span>
+                <span className="text-[var(--color-accent)] font-semibold">1.2.0 (GenVM Intelligent Contract)</span>
               </div>
               <div className="flex justify-between">
                 <span>Consensus Engine:</span>
@@ -301,11 +301,27 @@ export default function ProtocolArchitecturePage() {
                 <p className="text-[13px] text-[var(--color-fog)] leading-relaxed">
                   GenLayer validator nodes independently fetch the proof URL, parse raw evidence body, and audit against both universal rules (authenticity, coherence) and merchant custom criteria.
                   <br />
-                  &bull; <strong>VERIFIED (Pass):</strong> The reviewer receives their full stake back plus the merchant reward bounty (<code className="font-mono text-[#27a644]">reward_per_review</code>). The merchant&apos;s trust score recalculates dynamically.
+                  &bull; <strong>VERIFIED (100% Pass):</strong> The reviewer receives their full stake back plus the merchant reward bounty (<code className="font-mono text-[#27a644]">reward_per_review</code>). The evidence is permanently indexed to prevent duplicate claims, and the merchant trust score recalculates dynamically.
                   <br />
-                  &bull; <strong>REJECTED (Fraud / 404):</strong> The reviewer&apos;s stake is slashed and forfeited into the merchant&apos;s reward pool to compensate the ecosystem for spam processing. Zero bounty is paid.
+                  &bull; <strong>REJECTED (Fraud / Fake Proof):</strong> The reviewer stake is slashed and forfeited into the merchant reward pool only when authenticity fails. Zero bounty is paid.
                   <br />
-                  &bull; <strong>UNDETERMINED (Server Outage 5xx):</strong> No slashing occurs; funds remain safe for re-verification once the host recovers.
+                  &bull; <strong>REJECTED (Subjective Quality / Custom Rule Failure Only):</strong> When purchase evidence is authentic but review quality or custom criteria fail, the bounty is denied, but 100% of the reviewer stake is refunded (Slashing Safeguard).
+                  <br />
+                  &bull; <strong>UNDETERMINED (Server Outage / Timeout):</strong> No slashing occurs; funds remain safe in contract escrow for re-verification once the host recovers.
+                </p>
+              </div>
+
+              <div className="card-box p-5 space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="px-2 py-0.5 rounded bg-[var(--color-carbon)] border border-[var(--color-iron)] font-mono text-[11px] text-[#f59e0b]">
+                    PHASE 4
+                  </span>
+                  <h4 className="font-medium text-[15px] text-[var(--color-paper)]">
+                    Terminal Recovery &amp; Economic Liveness (`resolve_exhausted_critique`)
+                  </h4>
+                </div>
+                <p className="text-[13px] text-[var(--color-fog)] leading-relaxed">
+                  If upstream networks or hosts experience persistent outages exceeding 5 retries or 3600 seconds, anyone can trigger terminal recovery. The reviewer receives 100% of their locked stake back, the critique transitions to terminal status `exhausted`, and pending liability is released, immediately unblocking merchant archival and recovery of uncommitted escrow funds.
                 </p>
               </div>
             </div>

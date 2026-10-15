@@ -1,5 +1,68 @@
 import React from "react";
 
+export function CritiqProofLogo({ className = "w-6 h-6" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="cpl_shield_bg_comp" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#141824" />
+          <stop offset="100%" stopColor="#090a0f" />
+        </linearGradient>
+        <linearGradient id="cpl_border_glow_comp" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#6798ff" />
+          <stop offset="50%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#4f46e5" />
+        </linearGradient>
+        <linearGradient id="cpl_diamond_comp" x1="20%" y1="0%" x2="80%" y2="100%">
+          <stop offset="0%" stopColor="#6798ff" />
+          <stop offset="100%" stopColor="#2563eb" />
+        </linearGradient>
+      </defs>
+
+      <path
+        d="M24 3.5 L40.5 11.5 V25.5 C40.5 34.5 33 41.5 24 44.5 C15 41.5 7.5 34.5 7.5 25.5 V11.5 Z"
+        fill="url(#cpl_shield_bg_comp)"
+        stroke="url(#cpl_border_glow_comp)"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+
+      <circle cx="24" cy="8" r="1.8" fill="#38bdf8" />
+      <circle cx="35" cy="15" r="1.5" fill="#6798ff" />
+      <circle cx="13" cy="15" r="1.5" fill="#6798ff" />
+
+      <path
+        d="M24 13 L33 21 L24 35 L15 21 Z"
+        fill="url(#cpl_diamond_comp)"
+        fillOpacity="0.3"
+        stroke="#6798ff"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+
+      <path d="M15 21 H33" stroke="#6798ff" strokeWidth="1" strokeOpacity="0.6" />
+      <path d="M24 13 V35" stroke="#38bdf8" strokeWidth="1" strokeOpacity="0.4" />
+
+      <path
+        d="M18.5 24.5 L22.5 28.5 L30 19"
+        stroke="#ffffff"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      <path
+        d="M30 33.5 L36 38.5 L33 30.5"
+        fill="#38bdf8"
+        fillOpacity="0.4"
+        stroke="#38bdf8"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function ShieldIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
