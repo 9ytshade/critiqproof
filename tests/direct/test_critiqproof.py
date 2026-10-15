@@ -63,7 +63,7 @@ def create_sample_listing(
 
 def test_deploy_and_version(direct_deploy):
     contract = deploy_contract(direct_deploy)
-    assert contract.get_contract_version() == "1.1.0"
+    assert contract.get_contract_version() == "1.2.0"
     assert contract.get_listing_count() == 0
     assert contract.get_verdict_count() == 0
 
@@ -89,7 +89,7 @@ def test_create_listing_happy_path(direct_vm, direct_deploy, direct_alice):
 
     listing = contract.get_listing(listing_id)
     assert listing["id"] == 1
-    assert listing["owner"].as_bytes == direct_alice
+    assert listing["owner"] == direct_alice or listing["owner"].as_bytes == getattr(direct_alice, "as_bytes", direct_alice)
     assert listing["title"] == DEFAULT_TITLE
     assert listing["description"] == DEFAULT_DESC
     assert listing["category"] == DEFAULT_CATEGORY
@@ -273,7 +273,7 @@ def test_submit_critique_happy_path(direct_vm, direct_deploy, direct_alice, dire
     critique = contract.get_critique(listing_id, critique_id)
     assert critique["id"] == 1
     assert critique["listing_id"] == listing_id
-    assert critique["reviewer"].as_bytes == direct_bob
+    assert critique["reviewer"] == direct_bob or critique["reviewer"].as_bytes == getattr(direct_bob, "as_bytes", direct_bob)
     assert critique["rating"] == 5
     assert critique["review_text"] == VALID_REVIEW_TEXT
     assert critique["proof_url"] == VALID_PROOF_URL
@@ -553,19 +553,20 @@ def test_verify_critique_dead_link_http_404_rejected_and_slashed(
     )
     direct_vm.value = 0
 
-    # 404 response triggers immediate precheck rejection
+    # 404 response triggers UNDETERMINED to safeguard against wrongful slashing of expired links
     direct_vm.mock_web(
         r"receipts\.example\.com/.*",
         {"status": 404, "body": "404 Not Found"},
     )
 
     result = contract.verify_critique(listing_id, critique_id)
-    assert result["outcome"] == "REJECTED"
+    assert result["outcome"] == "UNDETERMINED"
     assert "HTTP 404" in result["evidence_note"]
 
-    # Stake slashed into pool
+    # Stake preserved in escrow, NOT slashed into pool
     listing = contract.get_listing(listing_id)
-    assert listing["reward_pool"] == reward_pool + stake_amount
+    assert listing["reward_pool"] == reward_pool
+    assert listing["pending_review_count"] == 1
 
 
 def test_verify_critique_temporary_server_error_undetermined_preserves_stake(

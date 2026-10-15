@@ -31,9 +31,9 @@ export type CategoryName = (typeof CATEGORIES_LIST)[number];
 
 export type ListingStatus = "active" | "archived";
 
-export type CritiqueStatus = "submitted" | "verified" | "rejected" | "undetermined";
+export type CritiqueStatus = "submitted" | "verified" | "rejected" | "undetermined" | "exhausted";
 
-export type VerdictOutcome = "VERIFIED" | "REJECTED" | "UNDETERMINED";
+export type VerdictOutcome = "VERIFIED" | "REJECTED" | "UNDETERMINED" | "EXHAUSTED";
 
 export type CriterionResult = "PASS" | "FAIL" | "UNDETERMINED";
 

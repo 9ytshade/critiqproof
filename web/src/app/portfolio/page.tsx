@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { Critique, Listing, Verdict } from "@/types/critiqproof";
-import { fetchListings, fetchCritiques, fetchVerdict } from "@/lib/genlayer";
+import { fetchListingsDetailed, fetchCritiquesDetailed, fetchVerdict } from "@/lib/genlayer";
 import { formatGen } from "@/lib/safety";
 import { useWallet } from "@/lib/use-wallet";
 import { CritiqueCard } from "@/components/critique-card";
@@ -16,6 +16,8 @@ export default function PortfolioPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [allCritiques, setAllCritiques] = useState<Critique[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFallbackData, setIsFallbackData] = useState(false);
+  const [rpcError, setRpcError] = useState<string | null>(null);
   const [activeVerdict, setActiveVerdict] = useState<Verdict | null>(null);
 
   const loadAll = async () => {
@@ -26,19 +28,25 @@ export default function PortfolioPage() {
     }
     setLoading(true);
     try {
-      const lList = await fetchListings();
-      setListings(lList);
+      const lRes = await fetchListingsDetailed();
+      setListings(lRes.listings);
+      let anyFallback = lRes.isFallback;
+      let err = lRes.errorMessage || null;
 
       const critiquesAccumulator: Critique[] = [];
-      for (const l of lList) {
+      for (const l of lRes.listings) {
         try {
-          const cList = await fetchCritiques(l.id);
-          critiquesAccumulator.push(...cList);
-        } catch (err) {
-          console.warn(`Error loading critiques for listing #${l.id}:`, err);
+          const cRes = await fetchCritiquesDetailed(l.id);
+          critiquesAccumulator.push(...cRes.critiques);
+          if (cRes.isFallback) anyFallback = true;
+          if (cRes.errorMessage && !err) err = cRes.errorMessage;
+        } catch (innerErr) {
+          console.warn(`Error loading critiques for listing #${l.id}:`, innerErr);
         }
       }
       setAllCritiques(critiquesAccumulator);
+      setIsFallbackData(anyFallback);
+      setRpcError(err);
     } finally {
       setLoading(false);
     }
@@ -49,21 +57,27 @@ export default function PortfolioPage() {
     let active = true;
     (async () => {
       try {
-        const lList = await fetchListings();
+        const lRes = await fetchListingsDetailed();
         if (!active) return;
-        setListings(lList);
+        setListings(lRes.listings);
+        let anyFallback = lRes.isFallback;
+        let err = lRes.errorMessage || null;
 
         const critiquesAccumulator: Critique[] = [];
-        for (const l of lList) {
+        for (const l of lRes.listings) {
           try {
-            const cList = await fetchCritiques(l.id);
-            critiquesAccumulator.push(...cList);
-          } catch (err) {
-            console.warn(`Error loading critiques for listing #${l.id}:`, err);
+            const cRes = await fetchCritiquesDetailed(l.id);
+            critiquesAccumulator.push(...cRes.critiques);
+            if (cRes.isFallback) anyFallback = true;
+            if (cRes.errorMessage && !err) err = cRes.errorMessage;
+          } catch (innerErr) {
+            console.warn(`Error loading critiques for listing #${l.id}:`, innerErr);
           }
         }
         if (active) {
           setAllCritiques(critiquesAccumulator);
+          setIsFallbackData(anyFallback);
+          setRpcError(err);
           setLoading(false);
         }
       } catch {
@@ -96,6 +110,7 @@ export default function PortfolioPage() {
     const verifiedReviews = myCritiques.filter((c) => c.status === "verified");
     const rejectedReviews = myCritiques.filter((c) => c.status === "rejected");
     const pendingReviews = myCritiques.filter((c) => c.status === "submitted" || c.status === "undetermined");
+    const exhaustedReviews = myCritiques.filter((c) => c.status === "exhausted");
 
     const rewardsEarnedWei = verifiedReviews.reduce((acc, c) => {
       const match = listings.find((l) => l.id === c.listing_id);
@@ -103,6 +118,7 @@ export default function PortfolioPage() {
     }, 0n);
 
     const slashedWei = rejectedReviews.reduce((acc, c) => acc + c.stake_amount, 0n);
+    const recoveredWei = exhaustedReviews.reduce((acc, c) => acc + c.stake_amount, 0n);
 
     return {
       totalCount: myCritiques.length,
@@ -110,8 +126,10 @@ export default function PortfolioPage() {
       verifiedCount: verifiedReviews.length,
       rejectedCount: rejectedReviews.length,
       pendingCount: pendingReviews.length,
+      exhaustedCount: exhaustedReviews.length,
       rewardsEarnedGen: formatGen(rewardsEarnedWei),
       slashedGen: formatGen(slashedWei),
+      recoveredGen: formatGen(recoveredWei),
     };
   }, [myCritiques, listings]);
 
@@ -168,6 +186,47 @@ export default function PortfolioPage() {
         </div>
       ) : (
         <div className="space-y-10">
+          {/* Live Consensus vs Fallback Banner */}
+          {isFallbackData ? (
+            <div
+              role="alert"
+              className="p-4 rounded-lg border border-amber-800/60 bg-amber-950/30 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+            >
+              <div className="flex items-start gap-3">
+                <span className="font-mono text-[10px] uppercase px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-300 font-semibold border border-amber-700/50 shrink-0 mt-0.5">
+                  FALLBACK DEMO RECORDS
+                </span>
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-white">Studionet RPC Offline - Displaying Demonstration Records</span>
+                  <p className="text-xs text-amber-200/80">
+                    {rpcError || "Unable to reach Studionet node. Portfolio metrics and historical critiques are currently displayed from demonstration cache."}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => void loadAll()}
+                className="px-3 py-1.5 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-100 text-xs font-mono transition cursor-pointer shrink-0"
+              >
+                Retry Live RPC
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between px-4 py-2 rounded-lg bg-[var(--color-carbon)] border border-[var(--color-iron)] text-xs font-mono">
+              <div className="flex items-center space-x-2 text-[#27a644]">
+                <span className="w-2 h-2 rounded-full bg-[#27a644] animate-pulse" />
+                <span className="font-semibold uppercase tracking-wider">Studionet Live Consensus</span>
+                <span className="text-[var(--color-fog)]">All portfolio balances and stakes verified directly on-chain</span>
+              </div>
+              <button
+                onClick={() => void loadAll()}
+                className="text-[var(--color-ash)] hover:text-[var(--color-paper)] transition-colors flex items-center space-x-1"
+              >
+                <RefreshIcon className="w-3.5 h-3.5" />
+                <span>Refresh</span>
+              </button>
+            </div>
+          )}
+
           {/* Reviewer Section */}
           <div className="space-y-4">
             <h2 className="text-base font-medium text-[var(--color-paper)] flex items-center space-x-2">
@@ -177,7 +236,7 @@ export default function PortfolioPage() {
               </span>
             </h2>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 font-mono">
               <div className="p-4 rounded-[8px] border border-[var(--color-iron)] bg-[var(--color-graphite)]">
                 <span className="text-[var(--color-ash)] text-xs block mb-1">Total Staked</span>
                 <span className="text-xl font-bold text-[var(--color-paper)]">{reviewerStats.totalStakedGen} GEN</span>
@@ -194,6 +253,13 @@ export default function PortfolioPage() {
                   {reviewerStats.verifiedCount} <span className="text-[var(--color-ash)] text-sm">/ {reviewerStats.pendingCount}</span>
                 </span>
                 <span className="text-[10px] text-[var(--color-ash)] block mt-1">Audited vs active</span>
+              </div>
+              <div className="p-4 rounded-[8px] border border-[var(--color-iron)] bg-[var(--color-graphite)]">
+                <span className="text-[var(--color-ash)] text-xs block mb-1">Recovered Stakes</span>
+                <span className="text-xl font-bold text-amber-400">{reviewerStats.recoveredGen} GEN</span>
+                <span className="text-[10px] text-[var(--color-ash)] block mt-1">
+                  {reviewerStats.exhaustedCount} exhausted (refunded)
+                </span>
               </div>
               <div className="p-4 rounded-[8px] border border-[var(--color-iron)] bg-[var(--color-graphite)]">
                 <span className="text-[var(--color-ash)] text-xs block mb-1">Slashed Stakes</span>

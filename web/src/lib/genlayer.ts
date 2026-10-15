@@ -20,7 +20,7 @@ export type { FinalizedTransactionReceipt };
 
 export const CRITIQPROOF_CONTRACT_ADDRESS: `0x${string}` =
   (process.env.NEXT_PUBLIC_CRITIQPROOF_CONTRACT_ADDRESS as `0x${string}`) ||
-  "0x888371B010c3A012A4c60e61b90c4EEC4Aa8304C";
+  "0x2a83a70B4427240b0C56ec7F07A98bFba67eB704";
 
 export const STUDIONET_RPC = "https://studio.genlayer.com/api";
 export const STUDIONET_CHAIN_ID = 61999;
@@ -36,6 +36,20 @@ export type TxHash = Parameters<ReturnType<typeof getPublicClient>["waitForTrans
 
 export interface FetchListingsResult {
   listings: Listing[];
+  isRpcError: boolean;
+  errorMessage?: string;
+  isFallback: boolean;
+}
+
+export interface FetchListingResult {
+  listing: Listing | null;
+  isRpcError: boolean;
+  errorMessage?: string;
+  isFallback: boolean;
+}
+
+export interface FetchCritiquesResult {
+  critiques: Critique[];
   isRpcError: boolean;
   errorMessage?: string;
   isFallback: boolean;
@@ -193,7 +207,7 @@ export async function fetchListings(): Promise<Listing[]> {
   return result.listings;
 }
 
-export async function fetchListing(id: number): Promise<Listing | null> {
+export async function fetchListingDetailed(id: number): Promise<FetchListingResult> {
   try {
     const client = getPublicClient();
     const itemRaw = (await client.readContract({
@@ -201,31 +215,74 @@ export async function fetchListing(id: number): Promise<Listing | null> {
       functionName: "get_listing",
       args: [BigInt(id)],
     })) as Record<string, unknown>;
-    return parseListingRecord(itemRaw);
-  } catch (err) {
-    console.warn(`fetchListing #${id} RPC error, falling back:`, err);
+    const parsed = parseListingRecord(itemRaw);
+    return {
+      listing: parsed,
+      isRpcError: false,
+      isFallback: false,
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`fetchListing #${id} RPC error, falling back:`, msg);
     const fallback = FALLBACK_LISTINGS.find((l) => l.id === id);
-    return fallback || null;
+    return {
+      listing: fallback || null,
+      isRpcError: true,
+      errorMessage: msg,
+      isFallback: true,
+    };
+  }
+}
+
+export async function fetchListing(id: number): Promise<Listing | null> {
+  const res = await fetchListingDetailed(id);
+  return res.listing;
+}
+
+export async function fetchCritiquesDetailed(listingId: number): Promise<FetchCritiquesResult> {
+  try {
+    const client = getPublicClient();
+    const rawData = await client.readContract({
+      address: CRITIQPROOF_CONTRACT_ADDRESS,
+      functionName: "get_listing_critiques",
+      args: [BigInt(listingId), 0, 50],
+    });
+
+    // GenLayer intelligent contract returns list[dict] directly.
+    // Also support { items: [...] } for backwards compatibility.
+    let items: Array<Record<string, unknown>> = [];
+    if (Array.isArray(rawData)) {
+      items = rawData as Array<Record<string, unknown>>;
+    } else if (
+      rawData &&
+      typeof rawData === "object" &&
+      "items" in rawData &&
+      Array.isArray((rawData as { items: unknown[] }).items)
+    ) {
+      items = (rawData as { items: Array<Record<string, unknown>> }).items;
+    }
+
+    const parsedCritiques = items.map(parseCritiqueRecord);
+    return {
+      critiques: parsedCritiques,
+      isRpcError: false,
+      isFallback: false,
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`fetchCritiques for listing #${listingId} RPC error, falling back:`, msg);
+    return {
+      critiques: FALLBACK_CRITIQUES[listingId] || [],
+      isRpcError: true,
+      errorMessage: msg,
+      isFallback: true,
+    };
   }
 }
 
 export async function fetchCritiques(listingId: number): Promise<Critique[]> {
-  try {
-    const client = getPublicClient();
-    const pageData = (await client.readContract({
-      address: CRITIQPROOF_CONTRACT_ADDRESS,
-      functionName: "get_listing_critiques",
-      args: [BigInt(listingId), 0, 50],
-    })) as { items: Array<Record<string, unknown>> };
-
-    if (pageData && Array.isArray(pageData.items) && pageData.items.length > 0) {
-      return pageData.items.map(parseCritiqueRecord);
-    }
-    return FALLBACK_CRITIQUES[listingId] || [];
-  } catch (err) {
-    console.warn(`fetchCritiques for listing #${listingId} error, falling back:`, err);
-    return FALLBACK_CRITIQUES[listingId] || [];
-  }
+  const res = await fetchCritiquesDetailed(listingId);
+  return res.critiques;
 }
 
 export async function fetchVerdict(verdictId: number): Promise<Verdict | null> {
@@ -337,3 +394,19 @@ export async function executeArchiveListing(
 
   return hash as unknown as TxHash;
 }
+
+export async function executeResolveExhaustedCritique(
+  listingId: number,
+  critiqueId: number,
+  client: ReturnType<typeof getPublicClient>
+): Promise<TxHash> {
+  const hash = await client.writeContract({
+    address: CRITIQPROOF_CONTRACT_ADDRESS,
+    functionName: "resolve_exhausted_critique",
+    args: [BigInt(listingId), critiqueId],
+    value: 0n,
+  });
+
+  return hash as unknown as TxHash;
+}
+

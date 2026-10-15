@@ -7,16 +7,22 @@ export function CritiqueCard({
   critique,
   onViewVerdict,
   onTriggerVerify,
+  onResolveExhausted,
   isVerifying = false,
+  isResolving = false,
 }: {
   critique: Critique;
   onViewVerdict?: (verdictId: number) => void;
   onTriggerVerify?: (critiqueId: number) => void;
+  onResolveExhausted?: (critiqueId: number) => void;
   isVerifying?: boolean;
+  isResolving?: boolean;
 }) {
   const isVerified = critique.status === "verified";
   const isRejected = critique.status === "rejected";
   const isPending = critique.status === "submitted" || critique.status === "undetermined";
+  const isUndetermined = critique.status === "undetermined";
+  const isExhausted = critique.status === "exhausted";
 
   return (
     <div className="card-box bg-[var(--color-graphite)] p-6 space-y-4">
@@ -49,6 +55,12 @@ export function CritiqueCard({
             <span className="flex items-center space-x-1 px-2.5 py-1 rounded-[6px] text-xs font-mono bg-[var(--color-carbon)] text-[var(--color-accent)] border border-[var(--color-accent)]/30">
               <ClockIcon className="w-3.5 h-3.5" />
               <span>Pending Consensus</span>
+            </span>
+          )}
+          {isExhausted && (
+            <span className="flex items-center space-x-1 px-2.5 py-1 rounded-[6px] text-xs font-mono bg-[var(--color-carbon)] text-amber-400 border border-amber-500/30">
+              <ClockIcon className="w-3.5 h-3.5" />
+              <span>Exhausted / Stake Recovered</span>
             </span>
           )}
           <span className="text-[11px] font-mono text-[var(--color-ash)]">
@@ -99,6 +111,16 @@ export function CritiqueCard({
             className="btn-primary text-xs disabled:opacity-50"
           >
             {isVerifying ? "Verifying On-Chain..." : "Audit via AI Magistrate"}
+          </button>
+        )}
+
+        {isUndetermined && onResolveExhausted && (
+          <button
+            onClick={() => onResolveExhausted(critique.id)}
+            disabled={isResolving}
+            className="btn-secondary text-xs disabled:opacity-50"
+          >
+            {isResolving ? "Resolving..." : "Recover Stake (Terminal Recovery)"}
           </button>
         )}
       </div>

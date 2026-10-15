@@ -21,6 +21,7 @@ coverage/
 *.pem
 *.key
 *-results.json
+!scripts/studionet-execution-results.json
 results.json
 *PLAYBOOK*
 *playbook*

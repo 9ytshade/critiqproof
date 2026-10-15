@@ -5,13 +5,14 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Critique, Listing, SubmitCritiqueInput, Verdict, PROOF_TYPES_LIST } from "@/types/critiqproof";
 import {
-  fetchCritiques,
-  fetchListing,
+  fetchCritiquesDetailed,
+  fetchListingDetailed,
   fetchVerdict,
   executeSubmitCritique,
   executeVerifyCritique,
   executeArchiveListing,
   executeFundRewardPool,
+  executeResolveExhaustedCritique,
   ensureStudionetNetwork,
 } from "@/lib/genlayer";
 import { pollTransactionUntilFinalized } from "@/lib/tx-waiter";
@@ -38,6 +39,9 @@ export default function ListingDetailPage() {
   const [listing, setListing] = useState<Listing | null>(null);
   const [critiques, setCritiques] = useState<Critique[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFallbackData, setIsFallbackData] = useState(false);
+  const [rpcError, setRpcError] = useState<string | null>(null);
+  const [resolvingCritiqueId, setResolvingCritiqueId] = useState<number | null>(null);
 
   const [activeVerdict, setActiveVerdict] = useState<Verdict | null>(null);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
@@ -51,12 +55,14 @@ export default function ListingDetailPage() {
     if (!listingId || isNaN(listingId)) return;
     setLoading(true);
     try {
-      const [lData, cData] = await Promise.all([
-        fetchListing(listingId),
-        fetchCritiques(listingId),
+      const [lRes, cRes] = await Promise.all([
+        fetchListingDetailed(listingId),
+        fetchCritiquesDetailed(listingId),
       ]);
-      setListing(lData);
-      setCritiques(cData);
+      setListing(lRes.listing);
+      setCritiques(cRes.critiques);
+      setIsFallbackData(lRes.isFallback || cRes.isFallback);
+      setRpcError(lRes.errorMessage || cRes.errorMessage || null);
     } finally {
       setLoading(false);
     }
@@ -65,10 +71,15 @@ export default function ListingDetailPage() {
   useEffect(() => {
     let active = true;
     if (listingId && !isNaN(listingId)) {
-      Promise.all([fetchListing(listingId), fetchCritiques(listingId)]).then(([l, c]) => {
+      Promise.all([
+        fetchListingDetailed(listingId),
+        fetchCritiquesDetailed(listingId),
+      ]).then(([lRes, cRes]) => {
         if (active) {
-          setListing(l);
-          setCritiques(c);
+          setListing(lRes.listing);
+          setCritiques(cRes.critiques);
+          setIsFallbackData(lRes.isFallback || cRes.isFallback);
+          setRpcError(lRes.errorMessage || cRes.errorMessage || null);
           setLoading(false);
         }
       });
@@ -209,6 +220,56 @@ export default function ListingDetailPage() {
     }
   };
 
+  const handleResolveExhausted = async (critiqueId: number) => {
+    try {
+      if (window.ethereum) await ensureStudionetNetwork(window.ethereum);
+    } catch (netErr: unknown) {
+      alert(netErr instanceof Error ? netErr.message : String(netErr));
+      return;
+    }
+
+    const client = getSignerClient();
+    if (!client) {
+      alert("Connect wallet to resolve exhausted critique.");
+      return;
+    }
+
+    setResolvingCritiqueId(critiqueId);
+    setTxStep({
+      name: `Resolving Exhausted Critique #${critiqueId} Terminal Recovery`,
+      status: "broadcasting",
+    });
+
+    try {
+      const hash = await executeResolveExhaustedCritique(listingId, critiqueId, client);
+      setTxStep({
+        name: "Terminal Recovery Consensus Finalizing",
+        hash,
+        status: "consensus",
+      });
+
+      await pollTransactionUntilFinalized(hash, {
+        actionName: "Exhaustion Stake Refund",
+      });
+
+      setTxStep({
+        name: "Exhaustion Recovery Finalized - Stake 100% Refunded",
+        hash,
+        status: "finalized",
+      });
+      await loadData();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setTxStep({
+        name: "Terminal Recovery Failed",
+        status: "error",
+        error: msg,
+      });
+    } finally {
+      setResolvingCritiqueId(null);
+    }
+  };
+
   const handleArchive = async () => {
     if (!confirm("Are you sure you want to archive this listing? 100% of the remaining reward pool will be refunded to your wallet.")) {
       return;
@@ -338,6 +399,47 @@ export default function ListingDetailPage() {
         <span>/</span>
         <span className="text-[var(--color-paper)]">Listing #{listing.id}</span>
       </div>
+
+      {/* Live Consensus vs Fallback Banner */}
+      {isFallbackData ? (
+        <div
+          role="alert"
+          className="p-4 rounded-lg border border-amber-800/60 bg-amber-950/30 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+        >
+          <div className="flex items-start gap-3">
+            <span className="font-mono text-[10px] uppercase px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-300 font-semibold border border-amber-700/50 shrink-0 mt-0.5">
+              FALLBACK DEMO RECORD
+            </span>
+            <div className="space-y-1">
+              <span className="text-sm font-medium text-white">Studionet RPC Offline - Displaying Demonstration Record</span>
+              <p className="text-xs text-amber-200/80">
+                {rpcError || "Unable to reach Studionet node. This record is demonstration fallback data. Reconnect to Studionet to submit or verify on-chain."}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={loadData}
+            className="px-3 py-1.5 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-100 text-xs font-mono transition cursor-pointer shrink-0"
+          >
+            Retry Live RPC
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between px-4 py-2 rounded-lg bg-[var(--color-carbon)] border border-[var(--color-iron)] text-xs font-mono">
+          <div className="flex items-center space-x-2 text-[#27a644]">
+            <span className="w-2 h-2 rounded-full bg-[#27a644] animate-pulse" />
+            <span className="font-semibold uppercase tracking-wider">Studionet Live Consensus</span>
+            <span className="text-[var(--color-fog)]">Listing #{listing.id} verified directly on-chain</span>
+          </div>
+          <button
+            onClick={loadData}
+            className="text-[var(--color-ash)] hover:text-[var(--color-paper)] transition-colors flex items-center space-x-1"
+          >
+            <RefreshIcon className="w-3.5 h-3.5" />
+            <span>Refresh</span>
+          </button>
+        </div>
+      )}
 
       {/* Main Header Card */}
       <div className="card-box bg-[var(--color-graphite)] p-6 sm:p-10 space-y-6">
@@ -525,7 +627,7 @@ export default function ListingDetailPage() {
           </div>
 
           <div className="flex items-center space-x-1.5 overflow-x-auto text-xs font-mono">
-            {["all", "verified", "rejected", "submitted", "undetermined"].map((filter) => (
+            {["all", "verified", "rejected", "submitted", "undetermined", "exhausted"].map((filter) => (
               <button
                 key={filter}
                 onClick={() => setSelectedFilter(filter)}
@@ -562,6 +664,8 @@ export default function ListingDetailPage() {
                 critique={critique}
                 onViewVerdict={handleOpenVerdict}
                 onTriggerVerify={handleTriggerVerify}
+                onResolveExhausted={handleResolveExhausted}
+                isResolving={resolvingCritiqueId === critique.id}
               />
             ))}
           </div>

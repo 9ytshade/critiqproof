@@ -383,11 +383,12 @@ def test_stress_dead_link_http_404_slashing(
     )
 
     verdict = contract.verify_critique(listing_id, critique_id)
-    assert verdict["outcome"] == "REJECTED"
+    assert verdict["outcome"] == "UNDETERMINED"
     assert "HTTP 404" in verdict["evidence_note"]
 
     listing = contract.get_listing(listing_id)
-    assert listing["reward_pool"] == initial_pool + stake_amount
+    assert listing["reward_pool"] == initial_pool
+    assert listing["pending_review_count"] == 1
 
 
 def test_stress_transient_http_503_preserves_stake(
@@ -586,6 +587,6 @@ def test_stress_double_verification_prevention(
     contract.verify_critique(listing_id, critique_id)
 
     # Second verification attempt must revert
-    with direct_vm.expect_revert("Critique is already verified or rejected"):
+    with direct_vm.expect_revert("Critique is already verified"):
         contract.verify_critique(listing_id, critique_id)
 
